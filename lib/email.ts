@@ -12,7 +12,7 @@ export async function sendSignInEmail(
     from: `${serviceName} <${emailAddress}>`,
     to: [email],
     subject: `${serviceName}の認証コード`,
-    text: `認証コード: ${otp}`,
+    text: `認証コード:\n${otp}`,
   });
 
   if (error) {
