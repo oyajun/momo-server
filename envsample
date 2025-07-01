@@ -1,0 +1,13 @@
+# !!! IMPORTANT !!!
+# CHANGE THIS FILE NAME TO .env
+
+SERVICE_NAME="momo"
+
+DATABASE_URL=
+
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000 #Base URL of your app
+
+# https://resend.com/api-keys
+RESEND_API_KEY=
+EMAIL_ADDRESS=
