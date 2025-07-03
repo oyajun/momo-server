@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { emailOTP, openAPI } from "better-auth/plugins";
-import { PrismaClient } from "@/app/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { sendSignInEmail } from "./email";
 
 const EMAIL_ADDRESS = process.env.EMAIL_ADDRESS;
@@ -10,8 +10,6 @@ const SERVICE_NAME = process.env.SERVICE_NAME;
 if (!EMAIL_ADDRESS || !SERVICE_NAME) {
   throw new Error("Missing environment variables for email service");
 }
-
-const prisma = new PrismaClient();
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
