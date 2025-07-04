@@ -24,6 +24,9 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  profiles      Profile[]
+  records       Record[]
+  mybooks       MyBook[]
 
   @@unique([email])
   @@map("user")
@@ -72,4 +75,94 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+
+// momo
+model Profile {
+  userId    String      @id
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("profile")
+}
+
+model Record {
+  id        BigInt      @id @default(autoincrement())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+
+  isbn      String?
+  publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: SetNull)
+  
+  originalBookId BigInt?
+  originalBook OriginalBook?  @relation(fields: [originalBookId], references: [id], onDelete: SetNull)
+
+  amount    Int
+  dateUTC   DateTime
+  dateLocal DateTime
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("record")
+}
+
+model PublishedBook {
+  isbn      String      @id
+  title     String
+  imageUrl  String
+  records   Record[]
+  myBook    MyBook[]
+  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("publishedbook")
+}
+
+model OriginalBook {
+  id        BigInt      @unique
+  myBook    MyBook      @relation(fields: [id], references: [id], onDelete: Cascade)
+  title     String
+  color     String
+  records   Record[]
+  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("originalbook")
+}
+
+enum BookStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model MyBook {
+  id        BigInt      @id @default(autoincrement())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Int
+  isbn      String?
+  status    BookStatus
+
+  // published book or original book 
+
+  // published book
+  publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: SetNull)
+  originalBookId  BigInt?
+
+  // original book
+  originalBook OriginalBook?
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("mybook")
 }
