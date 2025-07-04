@@ -90,22 +90,30 @@ model Profile {
   @@map("profile")
 }
 
+enum RecordType{
+  PUBLISHED_BOOK
+  ORIGINAL_BOOK
+  NO_BOOK
+}
+
 model Record {
   id        BigInt      @id @default(autoincrement())
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  type      RecordType
+  amount    Int
+  comment   String?
+  dateUTC   DateTime
+  timeDifference  Int
+  
   // PublishedBook
   isbn      String?
-  publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: NoAction)
+  //publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: NoAction)
   
   // OriginalBook
   originalBookId BigInt?
   originalBook MyBook?  @relation(fields: [originalBookId], references: [id], onDelete: NoAction)
-
-  amount    Int
-  dateUTC   DateTime
-  dateLocal DateTime
 
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -113,18 +121,18 @@ model Record {
   @@map("record")
 }
 
-model PublishedBook {
-  isbn      String      @id
-  title     String
-  imageUrl  String
-  records   Record[]
-  myBook    MyBook[]
+// model PublishedBook {
+//   isbn      String      @id
+//   title     String
+//   imageUrl  String
+//   records   Record[]
+//   myBook    MyBook[]
   
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+//   createdAt DateTime    @default(now())
+//   updatedAt DateTime    @updatedAt
 
-  @@map("publishedbook")
-}
+//   @@map("publishedbook")
+// }
 
 enum BookStatus {
   NOT_STARTED
@@ -142,7 +150,7 @@ model MyBook {
   // published book or original book 
   // published book
   isbn      String?
-  publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: SetNull)
+  //publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: SetNull)
   // original book
   title     String?
   color     String?

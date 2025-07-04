@@ -2,7 +2,9 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-async function POST(request: Request) {
+type RecordType = "PUBLISHED_BOOK" | "ORIGINAL_BOOK" | "NO_BOOK";
+
+export async function POST(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -12,56 +14,74 @@ async function POST(request: Request) {
   }
 
   const body = await request.json();
-  if (!body || typeof body.amount !== "number" || !body.date) {
+  const {
+    type,
+    amount,
+    comment,
+    dateUTC,
+    timeDifference,
+    isbn,
+    originalBookId,
+  } = body;
+
+  if (!type || typeof amount !== "number" || !dateUTC || !timeDifference) {
     return new Response("Invalid request body", { status: 400 });
   }
 
-  const record = await prisma.record
-    .create({
-      data: {
-        userId: session.user.id,
-        amount: body.amount,
-        date: body.date,
-      },
-    })
-    .catch((error) => {
-      console.error("Error creating record:", error);
-      return new Response("Error creating record", { status: 500 });
-    });
+  // 共通フィールド
+  const baseData: {
+    userId: string;
+    type: RecordType;
+    amount: number;
+    comment?: string;
+    dateUTC: Date;
+    timeDifference: number;
 
-  return new Response(JSON.stringify(record), {
-    status: 201,
-    headers: { "Content-Type": "application/json" },
-  });
-}
+    isbn?: string;
+    originalBookId?: bigint;
+  } = {
+    userId: session.user.id,
+    type,
+    amount,
+    comment,
+    dateUTC: new Date(dateUTC),
+    timeDifference,
+  };
 
-async function DELETE(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+  if (type === "PUBLISHED_BOOK") {
+    if (!isbn) {
+      return new Response("Missing isbn for published book", { status: 400 });
+    }
+    baseData.isbn = isbn;
+  } else if (type === "ORIGINAL_BOOK") {
+    if (!originalBookId) {
+      return new Response("Missing originalBookId for original book", {
+        status: 400,
+      });
+    }
+    try {
+      baseData.originalBookId = BigInt(originalBookId);
+    } catch (_error) {
+      return new Response("originalBookId is not BigInt", {
+        status: 400,
+      });
+    }
+  } else if (type === "NO_BOOK") {
+  } else {
+    return new Response("Invalid type", { status: 400 });
   }
 
-  const body = await request.json();
-  if (!body || !body.id) {
-    return new Response("Invalid request body", { status: 400 });
-  }
-
-  prisma.record
-    .delete({
-      where: {
-        id: body.id,
-        userId: session.user.id,
-      },
-    })
-    .catch((error) => {
-      console.error("Error creating record:", error);
-      return new Response("Error deleting record", { status: 500 });
+  try {
+    await prisma.record.create({
+      data: baseData,
     });
 
-  return new Response(null, { status: 204 });
+    return new Response(null, {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error creating record:", error);
+    return new Response("Error creating record", { status: 500 });
+  }
 }
-
-export { POST, DELETE };
