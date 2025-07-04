@@ -159,7 +159,7 @@ model MyBook {
   originalBookId  BigInt?
 
   // original book
-  // If published book is null
+  originalBook OriginalBook?
 
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
