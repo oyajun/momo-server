@@ -95,12 +95,13 @@ model Record {
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-
+  // PublishedBook
   isbn      String?
-  publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: SetNull)
+  publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: NoAction)
   
+  // OriginalBook
   originalBookId BigInt?
-  originalBook OriginalBook?  @relation(fields: [originalBookId], references: [id], onDelete: SetNull)
+  originalBook MyBook?  @relation(fields: [originalBookId], references: [id], onDelete: NoAction)
 
   amount    Int
   dateUTC   DateTime
@@ -125,19 +126,6 @@ model PublishedBook {
   @@map("publishedbook")
 }
 
-model OriginalBook {
-  id        BigInt      @unique
-  myBook    MyBook      @relation(fields: [id], references: [id], onDelete: Cascade)
-  title     String
-  color     String
-  records   Record[]
-  
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-
-  @@map("originalbook")
-}
-
 enum BookStatus {
   NOT_STARTED
   IN_PROGRESS
@@ -149,20 +137,21 @@ model MyBook {
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   order     Int
-  isbn      String?
   status    BookStatus
 
   // published book or original book 
-
   // published book
+  isbn      String?
   publishedBook PublishedBook? @relation(fields: [isbn], references: [isbn], onDelete: SetNull)
-  originalBookId  BigInt?
-
   // original book
-  originalBook OriginalBook?
+  title     String?
+  color     String?
+  icon      String?
+  records   Record[]
 
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
+  @@unique([userId, isbn])
   @@map("mybook")
 }
