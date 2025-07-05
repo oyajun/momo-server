@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      RESEND_API_KEY: "samplekey"
+      RESEND_API_KEY: "re_aLLdurvp_PQLos3qTdHs1pdEGEvHge1TL" # 無効なKEY
       EMAIL_ADDRESS: "sample@sample.net"
     strategy:
       matrix:
