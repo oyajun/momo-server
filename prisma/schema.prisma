@@ -105,7 +105,7 @@ model Record {
   amount    Int
   comment   String?
   dateUTC   DateTime
-  timeDifference  Int
+  dateLocal DateTime
   
   // PublishedBook
   isbn      String?
