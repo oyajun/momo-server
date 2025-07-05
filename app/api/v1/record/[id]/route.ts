@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -14,13 +14,14 @@ export async function DELETE(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  if (!params.id) {
+  const { id } = await params;
+  if (!id) {
     return new Response("Missing ID parameter", { status: 400 });
   }
 
   let recordId: bigint;
   try {
-    recordId = BigInt(params.id);
+    recordId = BigInt(id);
   } catch (_error) {
     return new Response("Invalid ID format", { status: 400 });
   }
