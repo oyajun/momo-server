@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RESEND_API_KEY: "samplekey"
+      EMAIL_ADDRESS: "sample@sample.net"
     strategy:
       matrix:
         node-version: [22.x]
