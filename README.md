@@ -6,6 +6,7 @@
 - Node.js
 - Next.js (App Router)
 - TypeScript
+- Zod
 - Prisma ORM
 - PostgreSQL
 - Better Auth
