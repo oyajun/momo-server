@@ -14,6 +14,10 @@ jobs:
     env:
       RESEND_API_KEY: "re_aLLdurvp_PQLos3qTdHs1pdEGEvHge1TL" # 無効なKEY
       EMAIL_ADDRESS: "sample@sample.net"
+      SERVICE_NAME: "momo"
+      DATABASE_URL: "postgres://sample:sample@localhost:5432/postgres"
+      BETTER_AUTH_SECRET: "sample"
+      BETTER_AUTH_URL: "http://localhost:3000"
     strategy:
       matrix:
         node-version: [22.x]
