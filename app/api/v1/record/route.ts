@@ -7,7 +7,7 @@ const baseSchema = z.object({
   amount: z
     .number()
     .int()
-    .min(1) //1h
+    .min(1) //1min.
     .max(60 * 24), //24h
   comment: z.optional(z.string()),
   dateUTC: z.iso.datetime(),
