@@ -21,7 +21,9 @@ const PublishedBook = baseSchema.extend({
 
 const OriginalBook = baseSchema.extend({
   type: z.literal("ORIGINAL_BOOK"),
-  originalBookId: z.bigint(),
+  originalBookId: z.string().transform((val) => {
+    return BigInt(val);
+  }),
 });
 
 const NoBook = baseSchema.extend({
