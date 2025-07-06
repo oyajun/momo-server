@@ -27,6 +27,8 @@ model User {
   profiles      Profile[]
   records       Record[]
   mybooks       MyBook[]
+  follows       Follow[] @relation("Follower")
+  followedBy    Follow[] @relation("Target")
 
   @@unique([email])
   @@map("user")
@@ -88,6 +90,18 @@ model Profile {
   updatedAt DateTime    @updatedAt
 
   @@map("profile")
+}
+
+model Follow {
+  followerId String
+  follower   User        @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  targetId   String
+  target     User        @relation("Target", fields: [targetId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime    @default(now())
+
+  @@unique([followerId, targetId])
+  @@map("follow")
 }
 
 enum RecordType{
