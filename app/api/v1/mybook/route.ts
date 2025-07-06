@@ -4,14 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const baseSchema = z.object({
-  amount: z
-    .number()
-    .int()
-    .min(1) //1min.
-    .max(60 * 24), //24h
-  comment: z.optional(z.string()),
-  dateUTC: z.iso.datetime(),
-  dateLocal: z.iso.datetime(),
+  status: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED"]),
 });
 
 const PublishedBook = baseSchema.extend({
@@ -21,13 +14,7 @@ const PublishedBook = baseSchema.extend({
 
 const OriginalBook = baseSchema.extend({
   type: z.literal("ORIGINAL_BOOK"),
-  originalBookId: z.string().transform((val) => {
-    return BigInt(val);
-  }),
-});
-
-const NoBook = baseSchema.extend({
-  type: z.literal("NO_BOOK"),
+  title: z.string().min(1).max(50),
 });
 
 export async function POST(request: Request) {
@@ -44,7 +31,7 @@ export async function POST(request: Request) {
   });
 
   const parsedBody = z
-    .discriminatedUnion("type", [PublishedBook, OriginalBook, NoBook])
+    .discriminatedUnion("type", [PublishedBook, OriginalBook])
     .safeParse(body);
   if (!parsedBody.success) {
     console.error("Zod validation error:", parsedBody.error);
@@ -52,9 +39,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    await prisma.record.create({
+    const maxOrder = await prisma.myBook.aggregate({
+      _max: { order: true },
+      where: { userId: session.user.id },
+    });
+
+    if (maxOrder._max.order === null) {
+      maxOrder._max.order = 0;
+    }
+
+    await prisma.myBook.create({
       data: {
         ...parsedBody.data,
+        order: maxOrder._max.order + 1,
         userId: session.user.id,
       },
     });

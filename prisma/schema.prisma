@@ -140,10 +140,16 @@ enum BookStatus {
   COMPLETED
 }
 
+enum BookType {
+  PUBLISHED_BOOK
+  ORIGINAL_BOOK
+}
+
 model MyBook {
   id        BigInt      @id @default(autoincrement())
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      BookType
   order     Int
   status    BookStatus
 
