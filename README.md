@@ -11,6 +11,7 @@
 - PostgreSQL
 - Better Auth
 - Resend
+- Superjson
 
 ## 開発ツール
 - Biome

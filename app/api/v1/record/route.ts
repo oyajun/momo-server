@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import superjson from "superjson";
 import * as z from "zod/v4";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +31,7 @@ const NoBook = baseSchema.extend({
   type: z.literal("NO_BOOK"),
 });
 
-export async function POST(request: Request) {
+async function POST(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -68,3 +69,70 @@ export async function POST(request: Request) {
     return new Response("Error creating record", { status: 500 });
   }
 }
+
+const getSchema = z.object({
+  cursor: z.optional(
+    z.string().transform((val) => {
+      return BigInt(val);
+    }),
+  ),
+  limit: z.optional(z.number().int().min(1).max(100)).default(10),
+});
+
+async function GET(request: Request) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const body = await request.json().catch((_error) => {
+    return new Response("Invalid JSON", { status: 400 });
+  });
+  const parsedBody = getSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    console.error("Zod validation error:", parsedBody.error);
+    return new Response("Invalid request body", { status: 400 });
+  }
+
+  try {
+    // フォローしているユーザーと自分の投稿を取得
+    // id を string に変換
+    const { cursor, limit } = parsedBody.data;
+    const records = await prisma.record.findMany({
+      where: {
+        OR: [
+          { userId: session.user.id },
+          {
+            userId: {
+              in: (
+                await prisma.follow.findMany({
+                  where: { followerId: session.user.id },
+                })
+              ).map((follow) => follow.targetId),
+            },
+          },
+        ],
+      },
+      orderBy: { id: "asc" },
+      take: limit,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+    });
+
+    const { json } = superjson.serialize(records);
+
+    return new Response(JSON.stringify(json), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error fetching records:", error);
+    return new Response("Error fetching records", { status: 500 });
+  }
+}
+
+export { POST, GET };
