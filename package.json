@@ -13,7 +13,7 @@
     "@prisma/client": "^6.11.1",
     "better-auth": "^1.2.12",
     "next": "15.3.5",
-    "react": "^19.0.0",
+    "react": "^19.1.1",
     "react-dom": "^19.0.0",
     "resend": "^4.6.0",
     "zod": "^4.0.10"
