@@ -70,15 +70,6 @@ async function POST(request: Request) {
   }
 }
 
-const getSchema = z.object({
-  cursor: z.optional(
-    z.string().transform((val) => {
-      return BigInt(val);
-    }),
-  ),
-  limit: z.optional(z.number().int().min(1).max(100)).default(10),
-});
-
 async function GET(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -88,20 +79,20 @@ async function GET(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = await request.json().catch((_error) => {
-    return new Response("Invalid JSON", { status: 400 });
-  });
-  const parsedBody = getSchema.safeParse(body);
-
-  if (!parsedBody.success) {
-    console.error("Zod validation error:", parsedBody.error);
-    return new Response("Invalid request body", { status: 400 });
-  }
+  const url = new URL(request.url);
+  const cursorStr = url.searchParams.get("cursor");
+  const limitStr = url.searchParams.get("limit");
 
   try {
-    // フォローしているユーザーと自分の投稿を取得
-    // id を string に変換
-    const { cursor, limit } = parsedBody.data;
+    // BigInt can throw an error
+    const cursor = cursorStr ? BigInt(cursorStr) : undefined;
+    // parseInt cannot throw an error
+    const limit = limitStr ? parseInt(limitStr) : 10;
+    console.log(limit);
+    if (limit < 1 || limit > 20 || Number.isNaN(limit)) {
+      return new Response("Invalid limit", { status: 400 });
+    }
+
     const records = await prisma.record.findMany({
       where: {
         OR: [
@@ -117,7 +108,15 @@ async function GET(request: Request) {
           },
         ],
       },
-      orderBy: { id: "asc" },
+      include: {
+        originalBook: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: { id: "desc" },
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
