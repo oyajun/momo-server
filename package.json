@@ -16,7 +16,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "resend": "^4.6.0",
-    "zod": "^4.0.10"
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.3",
