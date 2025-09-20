@@ -1,7 +1,12 @@
+import { get } from "http";
 import { headers } from "next/headers";
 import superjson from "superjson";
 import * as z from "zod/v4";
 import { auth } from "@/lib/auth";
+import {
+  getBookInfoFromISBN,
+  getRakutenBooksURLFromISBN,
+} from "@/lib/metadata";
 import { prisma } from "@/lib/prisma";
 
 const baseSchema = z.object({
@@ -120,6 +125,13 @@ async function GET(request: Request) {
       take: limit,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
+    });
+
+    records.forEach((record) => {
+      if (record.type === "PUBLISHED_BOOK" && record.isbn) {
+        //getRakutenBooksURLFromISBN(record.isbn);
+        getBookInfoFromISBN(record.isbn);
+      }
     });
 
     const { json } = superjson.serialize(records);
