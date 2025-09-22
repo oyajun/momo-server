@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -14,7 +14,7 @@ async function GET(
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = await params;
   if (!id) {
     return new Response("Missing ID parameter", { status: 400 });
   }
