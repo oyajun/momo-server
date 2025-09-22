@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { createAuthMiddleware } from "better-auth/api";
 import { emailOTP, openAPI } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
 import { sendSignInEmail } from "./email";
@@ -15,6 +16,16 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql", // or "mysql", "postgresql", ...etc
   }),
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path.startsWith("/sign-in/email-otp")) {
+        const newSession = ctx.context.newSession;
+        if (newSession) {
+          insert_Activity(newSession.user.id);
+        }
+      }
+    }),
+  },
   plugins: [
     openAPI(),
     emailOTP({
@@ -31,3 +42,26 @@ export const auth = betterAuth({
     }),
   ],
 });
+
+async function insert_Activity(userId: string) {
+  const activity_low = await prisma.activity.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  if (activity_low) {
+    // User already has an activity record, no need to insert a new one
+    return;
+  }
+
+  try {
+    await prisma.activity.create({
+      data: {
+        userId,
+      },
+    });
+  } catch (error) {
+    console.error("Error inserting activity low:", error);
+  }
+}
