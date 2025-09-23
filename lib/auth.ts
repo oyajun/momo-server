@@ -1,6 +1,8 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { createAuthMiddleware } from "better-auth/api";
 import { emailOTP, openAPI } from "better-auth/plugins";
+import insertActivity from "@/lib/insertActivity";
 import { prisma } from "@/lib/prisma";
 import { sendSignInEmail } from "./email";
 
@@ -15,6 +17,16 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql", // or "mysql", "postgresql", ...etc
   }),
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path.startsWith("/sign-in/email-otp")) {
+        const newSession = ctx.context.newSession;
+        if (newSession) {
+          insertActivity(newSession.user.id);
+        }
+      }
+    }),
+  },
   plugins: [
     openAPI(),
     emailOTP({
