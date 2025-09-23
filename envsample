@@ -11,3 +11,9 @@ BETTER_AUTH_URL=http://localhost:3000 #Base URL of your app
 # https://resend.com/api-keys
 RESEND_API_KEY=
 EMAIL_ADDRESS=
+
+# Rakuten API
+# https://webservice.rakuten.co.jp/
+RAKUTEN_BOOKS_BOOK_SEARCH_API_URL=https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404
+RAKUTEN_APPLICATION_ID=
+RAKUTEN_AFFILIATE_ID=

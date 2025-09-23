@@ -1,6 +1,12 @@
+import { get } from "http";
 import { headers } from "next/headers";
+import superjson from "superjson";
 import * as z from "zod/v4";
 import { auth } from "@/lib/auth";
+import {
+  getBookInfoFromISBN,
+  getRakutenBooksURLFromISBN,
+} from "@/lib/metadata";
 import { prisma } from "@/lib/prisma";
 
 const baseSchema = z.object({
@@ -30,7 +36,7 @@ const NoBook = baseSchema.extend({
   type: z.literal("NO_BOOK"),
 });
 
-export async function POST(request: Request) {
+async function POST(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -68,3 +74,76 @@ export async function POST(request: Request) {
     return new Response("Error creating record", { status: 500 });
   }
 }
+
+async function GET(request: Request) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const url = new URL(request.url);
+  const cursorStr = url.searchParams.get("cursor");
+  const limitStr = url.searchParams.get("limit");
+
+  try {
+    // BigInt can throw an error
+    const cursor = cursorStr ? BigInt(cursorStr) : undefined;
+    // parseInt cannot throw an error
+    const limit = limitStr ? parseInt(limitStr) : 10;
+    console.log(limit);
+    if (limit < 1 || limit > 20 || Number.isNaN(limit)) {
+      return new Response("Invalid limit", { status: 400 });
+    }
+
+    const records = await prisma.record.findMany({
+      where: {
+        OR: [
+          { userId: session.user.id },
+          {
+            userId: {
+              in: (
+                await prisma.follow.findMany({
+                  where: { followerId: session.user.id },
+                })
+              ).map((follow) => follow.targetId),
+            },
+          },
+        ],
+      },
+      include: {
+        originalBook: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: { id: "desc" },
+      take: limit,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+    });
+
+    records.forEach((record) => {
+      if (record.type === "PUBLISHED_BOOK" && record.isbn) {
+        //getRakutenBooksURLFromISBN(record.isbn);
+        getBookInfoFromISBN(record.isbn);
+      }
+    });
+
+    const { json } = superjson.serialize(records);
+
+    return new Response(JSON.stringify(json), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error fetching records:", error);
+    return new Response("Error fetching records", { status: 500 });
+  }
+}
+
+export { POST, GET };
