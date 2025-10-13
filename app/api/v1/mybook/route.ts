@@ -26,9 +26,12 @@ export async function POST(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = await request.json().catch((_error) => {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (_error) {
     return new Response("Invalid JSON", { status: 400 });
-  });
+  }
 
   const parsedBody = z
     .discriminatedUnion("type", [PublishedBook, OriginalBook])
