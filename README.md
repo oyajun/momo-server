@@ -19,3 +19,10 @@
 
 ## ライセンス
 AGPL-3.0
+
+## 開発環境のセットアップ
+1. npm install
+2. .env をenvsampleから作成し、必要な環境変数を設定
+3. npx prisma dev
+4. npx prisma db push
+5. npm run dev
