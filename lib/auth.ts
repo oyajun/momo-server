@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { createAuthMiddleware } from "better-auth/api";
-import { emailOTP, openAPI } from "better-auth/plugins";
+import { bearer, emailOTP, openAPI } from "better-auth/plugins";
 import insertActivity from "@/lib/insertActivity";
 import { prisma } from "@/lib/prisma";
 import { sendSignInEmail } from "./email";
@@ -28,6 +28,7 @@ export const auth = betterAuth({
     }),
   },
   plugins: [
+    bearer(),
     openAPI(),
     emailOTP({
       allowedAttempts: 5,
