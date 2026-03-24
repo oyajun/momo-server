@@ -40,6 +40,11 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      orderBy: {
+        activity: {
+          updatedAt: "desc",
+        },
+      },
     });
 
     console.log(followersUser);
