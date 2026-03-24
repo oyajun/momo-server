@@ -30,7 +30,7 @@ model User {
   follows       Follow[] @relation("Follower")
   followedBy    Follow[] @relation("Target")
   goals         Goal[]
-  activities    Activity[]
+  activity    Activity[]
 
   @@unique([email])
   @@map("user")
