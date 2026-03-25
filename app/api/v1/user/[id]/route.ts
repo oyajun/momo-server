@@ -21,7 +21,7 @@ async function GET(
   }
 
   try {
-    await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         id: id,
       },
@@ -38,7 +38,11 @@ async function GET(
       },
     });
 
-    return new Response(null, { status: 200 });
+    if (!user) {
+      return new Response("User not found", { status: 404 });
+    }
+
+    return new Response(JSON.stringify(user), { status: 200 });
   } catch (error) {
     console.error("Error fetching user:", error);
     return new Response("Failed to fetch user", {
