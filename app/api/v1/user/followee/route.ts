@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// フォローしているユーザー(followees)を取得
+// フォローしているユーザー(followees)と自分を取得
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: request.headers,
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const followees = await prisma.user
+    let followees = await prisma.user
       .findUnique({
         where: {
           id: session.user.id,
@@ -22,12 +22,15 @@ export async function GET(request: NextRequest) {
       .follows();
 
     if (!followees || followees.length === 0) {
-      return new Response(JSON.stringify([]), { status: 200 });
+      followees = [];
     }
 
     const followeesUser = await prisma.user.findMany({
       where: {
-        id: { in: followees.map((f) => f.targetId) },
+        OR: [
+          { id: session.user.id },
+          { id: { in: followees.map((f) => f.targetId) } },
+        ],
       },
       select: {
         id: true,
