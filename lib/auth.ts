@@ -27,6 +27,14 @@ export const auth = betterAuth({
       }
     }),
   },
+  user: {
+    deleteUser: {
+      enabled: true,
+    },
+  },
+  session: {
+    freshAge: 0,
+  },
   plugins: [
     bearer(),
     openAPI(),
