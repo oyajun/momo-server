@@ -39,9 +39,13 @@ async function POST(request: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = await request.json().catch((_error) => {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (_error) {
     return new Response("Invalid JSON", { status: 400 });
-  });
+  }
+
   const parsedBody = activitySchema.safeParse(body);
   if (!parsedBody.success) {
     return new Response("Invalid request body", { status: 400 });

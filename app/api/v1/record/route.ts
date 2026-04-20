@@ -1,12 +1,8 @@
-import { get } from "http";
 import { headers } from "next/headers";
 import superjson from "superjson";
 import * as z from "zod/v4";
 import { auth } from "@/lib/auth";
-import {
-  getBookInfoFromISBN,
-  getRakutenBooksURLFromISBN,
-} from "@/lib/metadata";
+import { getBookInfoFromISBN } from "@/lib/metadata";
 import { prisma } from "@/lib/prisma";
 
 const baseSchema = z.object({
@@ -15,7 +11,7 @@ const baseSchema = z.object({
     .int()
     .min(1) //1min.
     .max(60 * 24), //24h
-  comment: z.optional(z.string()),
+  comment: z.optional(z.string().max(1000)),
   dateUTC: z.iso.datetime(),
   dateLocal: z.iso.datetime(),
 });
@@ -45,9 +41,12 @@ async function POST(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const body = await request.json().catch((_error) => {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (_error) {
     return new Response("Invalid JSON", { status: 400 });
-  });
+  }
 
   const parsedBody = z
     .discriminatedUnion("type", [PublishedBook, OriginalBook, NoBook])
@@ -92,7 +91,7 @@ async function GET(request: Request) {
     // BigInt can throw an error
     const cursor = cursorStr ? BigInt(cursorStr) : undefined;
     // parseInt cannot throw an error
-    const limit = limitStr ? parseInt(limitStr) : 10;
+    const limit = limitStr ? parseInt(limitStr, 10) : 10;
     console.log(limit);
     if (limit < 1 || limit > 20 || Number.isNaN(limit)) {
       return new Response("Invalid limit", { status: 400 });
